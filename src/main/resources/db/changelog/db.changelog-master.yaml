@@ -1,0 +1,78 @@
+databaseChangeLog:
+  - changeSet:
+      id: 1
+      author: Aussawin Khaokum
+      changes:
+        - createTable:
+            tableName: users
+            columns:
+              - column:
+                  name: id
+                  type: int
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: username
+                  type: varchar(255)
+                  constraints:
+                    unique: true
+              - column:
+                  name: email
+                  type: varchar(255)
+                  constraints:
+                    unique: true
+              - column:
+                  name: password
+                  type: varchar(255)
+              - column:
+                  name: pin
+                  type: varchar(255)
+              - column:
+                  name: name
+                  type: varchar(255)
+                  constraints:
+                    unique: true
+              - column:
+                  name: created_at
+                  type: datetime
+                  constraints:
+                    nullable: true
+              - column:
+                  name: updated_at
+                  type: datetime
+                  constraints:
+                    nullable: true
+        - createTable:
+            tableName: log
+            columns:
+              - column:
+                  name: id
+                  type: int
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: sender
+                  type: varchar(255)
+              - column:
+                  name: target
+                  type: varchar(255)
+              - column:
+                  name: subject
+                  type: varchar(255)
+              - column:
+                  name: note
+                  type: varchar(255)
+              - column:
+                  name: created_at
+                  type: date
+                  constraints:
+                    nullable: true
+              - column:
+                  name: updated_at
+                  type: date
+                  constraints:
+                    nullable: true
