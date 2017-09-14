@@ -67,6 +67,9 @@ databaseChangeLog:
                   name: note
                   type: varchar(255)
               - column:
+                  name: status
+                  type: varchar(255)
+              - column:
                   name: created_at
                   type: date
                   constraints:

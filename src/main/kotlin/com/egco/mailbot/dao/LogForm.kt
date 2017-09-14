@@ -6,7 +6,7 @@ data class LogForm(val sender: String = "",
                    val target: String = "",
                    val subject: String = "",
                    val note: String = "",
-                   val date: Date = Date()
-                  //@todo send status require
+                   val date: Date = Date(),
+                   val status: String = ""
 ) {
 }

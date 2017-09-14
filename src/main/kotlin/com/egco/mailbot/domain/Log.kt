@@ -11,8 +11,8 @@ data class Log (@field:NotNull var sender: String = "",
            @field:NotNull var target: String = "",
            @field:NotNull var subject: String = "",
            var note: String = "",
+           val status: String = "",
            var updatedAt: Date = Date()
-           //@todo status require
 ) {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
