@@ -8,14 +8,14 @@ import javax.validation.constraints.NotNull
 
 @Entity
 @Table(name = "users")
-data class User(
-        @field:NotNull var username: String = "",
-        @field:NotNull @field:Email var email: String = "",
-        @field:NotNull var password: String = "",
-        @field:NotNull var pin: String = "",
-        var name: String = "",
-        var updatedAt: Date = Date()
-        ) {
+data class User(@field:NotNull var username: String = "",
+                @field:NotNull @field:Email var email: String = "",
+                @field:NotNull var password: String = "",
+                @field:NotNull var pin: String = "",
+                @field:NotNull var location: Int = 0,
+                var name: String = "",
+                var updatedAt: Date = Date()
+) {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long? = null

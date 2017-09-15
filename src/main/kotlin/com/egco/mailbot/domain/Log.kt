@@ -8,11 +8,13 @@ import javax.validation.constraints.NotNull
 @Entity
 @Table(name = "log")
 data class Log (@field:NotNull var sender: String = "",
-           @field:NotNull var target: String = "",
-           @field:NotNull var subject: String = "",
-           var note: String = "",
-           val status: String = "",
-           var updatedAt: Date = Date()
+                @field:NotNull var senderLocation: Int = 0,
+                @field:NotNull var target: String = "",
+                @field:NotNull var targetLocation: Int = 0,
+                @field:NotNull var subject: String = "",
+                var note: String = "",
+                val status: String = "",
+                var updatedAt: Date = Date()
 ) {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

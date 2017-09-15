@@ -35,6 +35,9 @@ databaseChangeLog:
                   constraints:
                     unique: true
               - column:
+                  name: location
+                  type: int
+              - column:
                   name: created_at
                   type: datetime
                   constraints:
@@ -58,8 +61,14 @@ databaseChangeLog:
                   name: sender
                   type: varchar(255)
               - column:
+                  name: senderlocation
+                  type: int
+              - column:
                   name: target
                   type: varchar(255)
+              - column:
+                  name: targetlocation
+                  type: int
               - column:
                   name: subject
                   type: varchar(255)
