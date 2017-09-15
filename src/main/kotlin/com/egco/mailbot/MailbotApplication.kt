@@ -17,10 +17,10 @@ class MailbotApplication(val userRepository: UserRepository,
     @Bean
     open fun init() = CommandLineRunner {
         val userList: MutableList<User> = ArrayList()
-        (1..5).mapTo(userList) { User("user$it", "user$it@gmail.com", "password", "1111", "user$it", Date()) }
+        (1..5).mapTo(userList) { User("user$it", "user$it@gmail.com", "password", "1111", it, "user$it", Date()) }
         userRepository.save(userList.toList())
         val logList: MutableList<Log> = ArrayList()
-        (1..3).mapTo(logList) { Log("user$it", "user${it+1}", "Subject#$it", "This is note #$it", Date()) }
+        (1..3).mapTo(logList) { Log("user$it", it, "user${it+1}", it+1, "Subject#$it", "This is note #$it", "success", Date()) }
         logRepository.save((logList.toList()))
     }
 }

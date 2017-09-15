@@ -61,13 +61,13 @@ databaseChangeLog:
                   name: sender
                   type: varchar(255)
               - column:
-                  name: senderlocation
+                  name: sender_location
                   type: int
               - column:
                   name: target
                   type: varchar(255)
               - column:
-                  name: targetlocation
+                  name: target_location
                   type: int
               - column:
                   name: subject

@@ -16,7 +16,8 @@ class BotController(val userRepository: UserRepository,
 
     @RequestMapping(value = "/call", method = arrayOf(RequestMethod.POST))
     fun calling(@RequestBody req: CallingReq): String{
-        val log: Log = Log(req.sender, req.target, req.subject, req.note, Date())
+        val loc: Int = 1
+        val log: Log = Log(req.sender, loc, req.target, loc, req.subject, req.note, "Calling", Date())
         logRepository.save(log)
         return "Success"
     }
