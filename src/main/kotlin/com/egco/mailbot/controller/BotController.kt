@@ -26,7 +26,7 @@ class BotController(val userRepository: UserRepository,
     fun showHistory(): ArrayList<LogForm>{
         val log: ArrayList<Log> = logRepository.findBySenderContainingOrderByCreatedAt("user")!!
         val logList: ArrayList<LogForm> = ArrayList()
-        log.mapTo(logList) { LogForm(it.sender, it.target, it.subject, it.note) }
+        log.mapTo(logList) { LogForm(it.sender, it.target, it.subject, it.note, it.updatedAt, it.status) }
         return logList
     }
 }

@@ -88,3 +88,15 @@ databaseChangeLog:
                   type: date
                   constraints:
                     nullable: true
+  - changeSet:
+      id: 2
+      author: Aussawin Khaokum
+      changes:
+        - loadData:
+            encoding: UTF-8
+            file: db/data/users.csv
+            tableName: users
+        - loadData:
+            encoding: UTF-8
+            file: db/data/log.csv
+            tableName: log

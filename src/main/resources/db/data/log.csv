@@ -1,0 +1,6 @@
+id,sender,sender_location,target,target_location,subject,note,status,created_at,updated_at
+1,user1,1,user2,2,subject1,note#1,success,2017-09-20 14:30:00,2017-09-21 14:30:00
+2,user2,2,user3,3,subject2,note#2,success,2017-09-21 14:30:00,2017-09-22 14:30:00
+3,user3,3,user4,4,subject3,note#3,success,2017-09-22 14:30:00,2017-09-23 14:30:00
+4,user4,4,user5,5,subject4,note#4,success,2017-09-23 14:30:00,2017-09-24 14:30:00
+5,user5,5,user1,1,subject5,note#5,success,2017-09-24 14:30:00,2017-09-25 14:30:00
