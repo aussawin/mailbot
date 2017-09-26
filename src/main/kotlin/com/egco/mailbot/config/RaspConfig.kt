@@ -4,5 +4,5 @@ import org.springframework.context.annotation.Configuration
 
 @Configuration
 class RaspConfig {
-    var baseUrl: String = "server/call"
+    var baseUrl: String = "http://server/call"
 }
