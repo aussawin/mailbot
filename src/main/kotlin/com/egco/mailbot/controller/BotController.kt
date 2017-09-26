@@ -19,14 +19,14 @@ class BotController(val userRepository: UserRepository,
 
     @RequestMapping(value = "/call", method = arrayOf(RequestMethod.POST))
     fun calling(@RequestBody req: CallingReq): String{
+
+        val tmpInt: TemplateInt = TemplateInt(1)
+        val restTemplate: RestTemplate = RestTemplate()
+        val res: String = restTemplate.postForObject(raspConfig.baseUrl, tmpInt, String::class.java)
+
         val loc: Int = 1
-        val log: Log = Log(req.sender, loc, req.target, loc, req.subject, req.note, "Calling", Date())
+        val log: Log = Log(req.sender, loc, req.target, loc, req.subject, req.note, res, Date())
         logRepository.save(log)
-
-        var tmpInt: TemplateInt = TemplateInt(1)
-
-        var restTemplate: RestTemplate = RestTemplate()
-        var retsult: TemplateInt = restTemplate.postForObject(raspConfig.baseUrl, tmpInt, TemplateInt::class.java)
 
         return "Success"
     }
