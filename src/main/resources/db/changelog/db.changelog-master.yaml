@@ -80,12 +80,12 @@ databaseChangeLog:
                   type: varchar(255)
               - column:
                   name: created_at
-                  type: date
+                  type: datetime
                   constraints:
                     nullable: true
               - column:
                   name: updated_at
-                  type: date
+                  type: datetime
                   constraints:
                     nullable: true
   - changeSet:
