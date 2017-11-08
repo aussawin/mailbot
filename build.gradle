@@ -57,6 +57,7 @@ dependencies {
 	testCompile('org.springframework.boot:spring-boot-starter-test')
 	compile("org.springframework.boot:spring-boot-starter-actuator")
 	compile('org.springframework.boot:spring-boot-starter-data-jpa')
+	compile('org.springframework.boot:spring-boot-starter-security')
 
 	compile('org.mariadb.jdbc:mariadb-java-client:1.5.7')
 	compile('net.java.dev.jna:jna:4.2.2')
@@ -64,4 +65,10 @@ dependencies {
 	compile('org.liquibase:liquibase-core')
 	compile('io.springfox:springfox-swagger2:2.6.1')
 	compile('io.springfox:springfox-swagger-ui:2.6.1')
+	compile group: 'joda-time', name: 'joda-time', version: '2.9.9'
+	compile group: 'org.apache.commons', name: 'commons-lang3', version: '3.6'
+	compile group: 'io.jsonwebtoken', name: 'jjwt', version: '0.7.0'
+	compile('com.squareup.retrofit2:retrofit:2.0.0')
+	compile('com.squareup.retrofit2:converter-moshi:2.0.0')
+	compile('com.squareup.okhttp3:logging-interceptor:3.2.0')
 }
