@@ -5,4 +5,5 @@ import org.springframework.data.jpa.repository.JpaRepository
 
 interface LogRepository : JpaRepository<Log, Long> {
     fun findBySenderOrderByCreatedAt(sender: String): ArrayList<Log>?
+    fun findByStatusOrderByCreatedAt(status: String): ArrayList<Log>?
 }

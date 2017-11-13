@@ -13,7 +13,7 @@ data class Log (@field:NotNull var sender: String = "",
                 @field:NotNull var targetLocation: Int = 0,
                 @field:NotNull var subject: String = "",
                 var note: String = "",
-                val status: String = "",
+                var status: String = "",
                 @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss.S")
                 var updatedAt: Date = Date()
 ) {
