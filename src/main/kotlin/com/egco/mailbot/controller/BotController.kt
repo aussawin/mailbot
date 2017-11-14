@@ -28,7 +28,7 @@ class BotController(val userRepository: UserRepository,
 //        val restTemplate: RestTemplate = RestTemplate()
 //        var res: String = restTemplate.postForObject(raspConfig.baseUrl, tmpInt, String::class.java)
 
-        val status = if (logRepository.findByStatusOrderByCreatedAt("wait")!!.isEmpty()) { "call" }
+        val status = if (logRepository.findByStatusOrderByCreatedAt("call")!!.isEmpty()) { "call" }
         else{ "wait" }
 
         val log = Log(sender.name, sender.location, target!!.name, target.location, req.subject, req.note, status, Date())
@@ -51,5 +51,10 @@ class BotController(val userRepository: UserRepository,
         val logList: ArrayList<LogTemplate> = ArrayList()
         log.mapTo(logList) { LogTemplate(it.sender, it.target, it.subject, it.note, it.createdAt, it.status) }
         return logList
+    }
+
+    @RequestMapping(value = "/changeStatus", method = arrayOf(RequestMethod.PATCH))
+    fun changeStatus(@RequestBody req: LogTemplate) {
+        logRepository.fingByStatus("call")!!.status = "done"
     }
 }
