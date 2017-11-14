@@ -55,6 +55,6 @@ class BotController(val userRepository: UserRepository,
 
     @RequestMapping(value = "/changeStatus", method = arrayOf(RequestMethod.PATCH))
     fun changeStatus(@RequestBody req: LogTemplate) {
-        logRepository.fingByStatus("call")!!.status = "done"
+        logRepository.findByStatus("call")!!.status = "done"
     }
 }
