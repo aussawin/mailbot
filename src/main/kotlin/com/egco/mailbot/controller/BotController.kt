@@ -5,6 +5,7 @@ import com.egco.mailbot.dao.CallingReqire
 import com.egco.mailbot.dao.LogTemplate
 import com.egco.mailbot.domain.Log
 import com.egco.mailbot.domain.User
+import com.egco.mailbot.exception.ResourceNotFoundException
 import com.egco.mailbot.repository.LogRepository
 import com.egco.mailbot.repository.UserRepository
 import org.springframework.security.core.context.SecurityContextHolder
@@ -22,6 +23,11 @@ class BotController(val userRepository: UserRepository,
     @RequestMapping(value = "/call", method = arrayOf(RequestMethod.POST))
     fun calling(@RequestBody req: CallingReqire): String{
         val sender = SecurityContextHolder.getContext().authentication.principal as User
+
+        if (!userRepository.existsByName(req.target)) {
+            print("xxxxxxxxxxxxxxxxxxxx Cannot found TARGET ! xxxxxxxxxxxxxxxxxxxx")
+            throw ResourceNotFoundException("Cannot found target name : ${req.target} !")
+        }
         val target = userRepository.findByName(req.target)
 
 //        val tmpInt: TemplateInt = TemplateInt(1)
