@@ -59,6 +59,12 @@ class BotController(val userRepository: UserRepository,
         return logList
     }
 
+    @RequestMapping(value = "/countQueue", method = arrayOf(RequestMethod.GET))
+    fun countQueue(): Int{
+        val log: ArrayList<Log> = logRepository.findByStatusOrderByCreatedAt("wait")!!
+        return log.size
+    }
+
     @RequestMapping(value = "/changeStatus", method = arrayOf(RequestMethod.PATCH))
     fun changeStatus(@RequestBody req: LogTemplate) {
         val callLog = logRepository.findByStatus("calling")
