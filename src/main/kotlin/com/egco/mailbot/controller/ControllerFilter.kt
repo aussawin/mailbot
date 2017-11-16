@@ -30,7 +30,7 @@ class ControllerFilter: javax.servlet.Filter {
         val servletRequest: HttpServletRequest = request as HttpServletRequest
         val servletResponse: HttpServletResponse = response as HttpServletResponse
 
-        if(servletRequest.requestURI.indexOf("/api/challenges")>=0) {
+        if(servletRequest.requestURI.indexOf("/api/controller")>=0) {
             servletResponse.setHeader("X-Token-Expired-Time", getExpToken(Date(), request.getHeader("X-Authorization")).toString())
         }
         chain!!.doFilter(servletRequest, servletResponse)
