@@ -2,6 +2,7 @@ package com.egco.mailbot.controller
 
 import com.egco.mailbot.config.RaspConfig
 import com.egco.mailbot.dao.CallingReqire
+import com.egco.mailbot.dao.FaceRequest
 import com.egco.mailbot.dao.LogTemplate
 import com.egco.mailbot.domain.Log
 import com.egco.mailbot.domain.User
@@ -14,62 +15,22 @@ import java.util.*
 import kotlin.collections.ArrayList
 
 @RestController
-@RequestMapping(value = "/api/controller")
+@RequestMapping(value = "/api/botController")
 @CrossOrigin("*")
-class BotController(val userRepository: UserRepository,
-                    val logRepository: LogRepository,
+class BotController(val logRepository: LogRepository,
                     val raspConfig: RaspConfig) {
 
-    @RequestMapping(value = "/call", method = arrayOf(RequestMethod.POST))
-    fun calling(@RequestBody req: CallingReqire): String{
-        val sender = SecurityContextHolder.getContext().authentication.principal as User
-
-        if (!userRepository.existsByName(req.target)) {
-            print("xxxxxxxxxxxxxxxxxxxx Cannot found TARGET ! xxxxxxxxxxxxxxxxxxxx")
-            throw ResourceNotFoundException("Cannot found target name : ${req.target} !")
-        }
-        val target = userRepository.findByName(req.target)
-
-//        val tmpInt: TemplateInt = TemplateInt(1)
-//        val restTemplate: RestTemplate = RestTemplate()
-//        var res: String = restTemplate.postForObject(raspConfig.baseUrl, tmpInt, String::class.java)
-
-        val status = if (logRepository.findByStatusOrderByCreatedAt("calling")!!.isEmpty()) { "calling" }
-        else{ "wait" }
-
-        val log = Log(sender.name, sender.location, target!!.name, target.location, req.subject, req.note, status, Date())
-        logRepository.save(log)
-        return "Success"
-    }
-    
-    @RequestMapping(value = "/history", method = arrayOf(RequestMethod.GET))
-    fun showHistory(): ArrayList<LogTemplate>{
-        val user = SecurityContextHolder.getContext().authentication.principal as User
-        val log: ArrayList<Log> = logRepository.findBySenderOrderByCreatedAt(user.name)!!
-        val logList: ArrayList<LogTemplate> = ArrayList()
-        log.mapTo(logList) { LogTemplate(it.sender, it.target, it.subject, it.note, it.createdAt, it.status) }
-        return logList
-    }
-
-    @RequestMapping(value = "/queue", method = arrayOf(RequestMethod.GET))
-    fun showQueue(): ArrayList<LogTemplate>{
-        val log: ArrayList<Log> = logRepository.findByStatusOrderByCreatedAt("wait")!!
-        val logList: ArrayList<LogTemplate> = ArrayList()
-        log.mapTo(logList) { LogTemplate(it.sender, it.target, it.subject, it.note, it.createdAt, it.status) }
-        return logList
-    }
-
-    @RequestMapping(value = "/countQueue", method = arrayOf(RequestMethod.GET))
-    fun countQueue(): Int{
-        val log: ArrayList<Log> = logRepository.findByStatusOrderByCreatedAt("wait")!!
-        return log.size
-    }
+    private var count: Int = 0
 
     @RequestMapping(value = "/changeStatus", method = arrayOf(RequestMethod.PATCH))
-    fun changeStatus(@RequestBody req: LogTemplate) {
-        val callLog = logRepository.findByStatus("calling")
-        if (callLog != null) {
-            callLog.status = "done"
+    fun changeStatus() {
+        val statusList = arrayListOf("calling", "sending", "verifying")
+        for (i in 0 until statusList.count()-1){
+            val callLog = logRepository.findByStatus(statusList[i])
+            if (callLog != null){
+                callLog.status = if (i==statusList.count()-1){ "done" }
+                else { statusList[i+1] }
+            }
             logRepository.save(callLog)
         }
         val waitList = logRepository.findByStatusOrderByCreatedAt("wait")
@@ -77,5 +38,18 @@ class BotController(val userRepository: UserRepository,
             waitList[0].status = "calling"
             logRepository.save(waitList)
         }
+    }
+
+    @RequestMapping(value = "/sendFaceName", method = arrayOf(RequestMethod.PATCH))
+    fun isUser(@RequestBody req: FaceRequest) {
+        if (logRepository.existsByTargetAndStatus(req.name, "verifying")) {
+            //@todo Trigger to UNLOCK
+            count = 0
+        }
+        else{
+            //@todo Trigger to Detect again
+            count += 1
+        }
+
     }
 }

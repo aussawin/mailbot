@@ -7,4 +7,5 @@ interface LogRepository : JpaRepository<Log, Long> {
     fun findByStatus(status: String): Log?
     fun findBySenderOrderByCreatedAt(sender: String): ArrayList<Log>?
     fun findByStatusOrderByCreatedAt(status: String): ArrayList<Log>?
+    fun existsByTargetAndStatus(target: String, status: String): Boolean
 }
