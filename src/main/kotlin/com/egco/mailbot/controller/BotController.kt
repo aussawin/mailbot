@@ -49,6 +49,9 @@ class BotController(val logRepository: LogRepository,
         else{
             //@todo Trigger to Detect again
             count += 1
+            if (count == 3){
+                //@todo Reject Request
+            }
         }
 
     }

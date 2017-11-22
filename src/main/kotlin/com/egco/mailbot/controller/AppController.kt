@@ -2,6 +2,7 @@ package com.egco.mailbot.controller
 
 import com.egco.mailbot.config.RaspConfig
 import com.egco.mailbot.dao.CallingReqire
+import com.egco.mailbot.dao.Location
 import com.egco.mailbot.dao.LogTemplate
 import com.egco.mailbot.domain.Log
 import com.egco.mailbot.domain.User
@@ -10,6 +11,7 @@ import com.egco.mailbot.repository.LogRepository
 import com.egco.mailbot.repository.UserRepository
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.web.bind.annotation.*
+import org.springframework.web.client.RestTemplate
 import java.util.*
 
 @RestController
@@ -37,9 +39,10 @@ class AppController(val userRepository: UserRepository,
         else{ "calling" }
 
 
-//        val tmpInt: TemplateInt = TemplateInt(1)
-//        val restTemplate: RestTemplate = RestTemplate()
-//        var res: String = restTemplate.postForObject(raspConfig.baseUrl, tmpInt, String::class.java)
+        val location = Location(sender.location)
+        val restTemplate = RestTemplate()
+        val res: String = restTemplate.postForObject(raspConfig.baseUrl, location, String::class.java)
+        print("Response from rasp : " + res)
 
         val log = Log(sender.name, sender.location, target!!.name, target.location, req.subject, req.note, status, Date())
         logRepository.save(log)
