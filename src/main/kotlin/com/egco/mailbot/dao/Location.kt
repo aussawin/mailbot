@@ -1,4 +1,4 @@
 package com.egco.mailbot.dao
 
-class Location(val location: Int) {
+class Location(val location: String) {
 }

@@ -39,10 +39,10 @@ class AppController(val userRepository: UserRepository,
         else{ "calling" }
 
 
-        val location = Location(sender.location)
+        val location = Location(sender.location.toString())
         val restTemplate = RestTemplate()
         val res: String = restTemplate.postForObject(raspConfig.baseUrl, location, String::class.java)
-        print("Response from rasp : " + res)
+        print("\n>>>>>>>>>>>>>>>> Response from rasp : $res <<<<<<<<<<<<<<<<<<<<<\n")
 
         val log = Log(sender.name, sender.location, target!!.name, target.location, req.subject, req.note, status, Date())
         logRepository.save(log)
