@@ -13,6 +13,15 @@ import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.client.RestTemplate
 import java.util.*
+import com.egco.mailbot.service.AndroidPushNotificationsService
+import org.json.JSONObject
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.http.ResponseEntity
+import org.springframework.http.HttpStatus
+import java.util.concurrent.CompletableFuture
+import org.springframework.http.HttpEntity
+import java.util.concurrent.ExecutionException
+
 
 @RestController
 @RequestMapping(value = "/api/controller")
@@ -20,6 +29,9 @@ import java.util.*
 class AppController(val userRepository: UserRepository,
                     val logRepository: LogRepository,
                     val raspConfig: RaspConfig) {
+
+    private val TOPIC = "JavaSampleApproach"
+    var androidPushNotificationsService: AndroidPushNotificationsService? = null
 
     @RequestMapping(value = "/call", method = arrayOf(RequestMethod.POST))
     fun calling(@RequestBody req: CallingReqire): String{
@@ -70,6 +82,42 @@ class AppController(val userRepository: UserRepository,
     fun countQueue(): Int{
         val log: ArrayList<Log> = logRepository.findByStatusOrderByCreatedAt("wait")!!
         return log.size
+    }
+
+    @RequestMapping(value = "/send", method = arrayOf(RequestMethod.GET))
+    fun send(): ResponseEntity<String> {
+        val body = JSONObject()
+        body.put("to", "/topics/" + TOPIC)
+        body.put("priority", "high")
+
+        val notification = JSONObject()
+        notification.put("title", "JSA Notification")
+        notification.put("body", "Happy Message!")
+
+        val data = JSONObject()
+        data.put("Key-1", "JSA Data 1")
+        data.put("Key-2", "JSA Data 2")
+
+        body.put("notification", notification)
+        body.put("data", data)
+
+        val request = HttpEntity(body.toString())
+
+        val pushNotification = androidPushNotificationsService!!.send(request)
+        CompletableFuture.allOf(pushNotification).join()
+
+        try {
+            val firebaseResponse = pushNotification.get()
+
+            return ResponseEntity(firebaseResponse, HttpStatus.OK)
+        } catch (e: InterruptedException) {
+            e.printStackTrace()
+        } catch (e: ExecutionException) {
+            e.printStackTrace()
+        }
+
+
+        return ResponseEntity("Push Notification ERROR!", HttpStatus.BAD_REQUEST)
     }
 
 }
