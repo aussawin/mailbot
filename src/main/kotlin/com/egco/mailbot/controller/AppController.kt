@@ -32,7 +32,7 @@ class AppController(val userRepository: UserRepository,
                     val raspConfig: RaspConfig) {
 
     private val TOPIC = "JavaSampleApproach"
-    var androidPushNotificationsService: AndroidPushNotificationsService? = null
+    var androidPushNotificationsService = AndroidPushNotificationsService()
 
     @RequestMapping(value = "/call", method = arrayOf(RequestMethod.POST))
     fun calling(@RequestBody req: CallingReqire): String{
@@ -115,7 +115,7 @@ class AppController(val userRepository: UserRepository,
 
         val request = HttpEntity(body.toString())
 
-        val pushNotification = androidPushNotificationsService!!.send(request)
+        val pushNotification = androidPushNotificationsService.send(request)
         CompletableFuture.allOf(pushNotification).join()
 
         try {
