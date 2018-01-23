@@ -21,6 +21,7 @@ import org.springframework.http.HttpStatus
 import java.util.concurrent.CompletableFuture
 import org.springframework.http.HttpEntity
 import java.util.concurrent.ExecutionException
+import kotlin.collections.ArrayList
 
 
 @RestController
@@ -82,6 +83,17 @@ class AppController(val userRepository: UserRepository,
     fun countQueue(): Int{
         val log: ArrayList<Log> = logRepository.findByStatusOrderByCreatedAt("wait")!!
         return log.size
+    }
+
+    @RequestMapping(value = "/getTargetName", method = arrayOf(RequestMethod.GET))
+    fun getTargetName(): ArrayList<String>{
+        val user = SecurityContextHolder.getContext().authentication.principal as User
+        val target = userRepository.findByUsernameIsNotNull()
+        val targetName: ArrayList<String> = arrayListOf()
+        target!!
+                .filter { it.name!=user.name }
+                .mapTo(targetName) { it.name }
+        return targetName
     }
 
     @RequestMapping(value = "/send", method = arrayOf(RequestMethod.GET))
