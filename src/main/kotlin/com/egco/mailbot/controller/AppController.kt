@@ -23,16 +23,12 @@ import com.google.firebase.auth.FirebaseCredentials
 import java.io.FileInputStream
 
 
-
-
 @RestController
 @RequestMapping(value = "/api/controller")
 @CrossOrigin("*")
 class AppController(val userRepository: UserRepository,
                     val logRepository: LogRepository,
-                    val raspConfig: RaspConfig,
-                    val firebaseConfig: FirebaseConfig) {
-
+                    val raspConfig: RaspConfig) {
 
     @RequestMapping(value = "/call", method = arrayOf(RequestMethod.POST))
     fun calling(@RequestBody req: CallingReqire): String{
@@ -51,11 +47,10 @@ class AppController(val userRepository: UserRepository,
         val status = if (isQueue){ "wait" }
         else{ "calling" }
 
-
         val location = Location(sender.location.toString())
-        val restTemplate = RestTemplate()
-        val res: String = restTemplate.postForObject(raspConfig.baseUrl, location, String::class.java)
-        print("\n>>>>>>>>>>>>>>>> Response from rasp : $res <<<<<<<<<<<<<<<<<<<<<\n")
+//        val restTemplate = RestTemplate()
+//        val res: String = restTemplate.postForObject(raspConfig.baseUrl, location, String::class.java)
+//        print("\n>>>>>>>>>>>>>>>> Response from rasp : $res <<<<<<<<<<<<<<<<<<<<<\n")
 
         val log = Log(sender.name, sender.location, target!!.name, target.location, req.subject, req.note, status, Date())
         logRepository.save(log)
