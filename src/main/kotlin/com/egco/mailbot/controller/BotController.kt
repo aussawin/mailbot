@@ -20,7 +20,7 @@ class BotController(val logRepository: LogRepository,
     @RequestMapping(value = "/changeStatus", method = arrayOf(RequestMethod.PATCH))
     fun changeStatus() {
         var log: Log? = null
-        arrayListOf("calling", "sending", "verifying")
+        arrayListOf("calling", "sending", "verifying", "returning")
                 .filter { logRepository.findByStatus(it) != null }
                 .forEach { log = logRepository.findByStatus(it) }
         if (log != null){
@@ -32,9 +32,10 @@ class BotController(val logRepository: LogRepository,
                 }
                 "sending" -> log!!.status = "verifying"
                 "verifying" -> log!!.status = "done"
+                "returning" -> log!!.status = "failed"
             }
             logRepository.save(log)
-            if (log!!.status == "done"){
+            if (log!!.status == "done" || log!!.status == "failed"){
                 val waitList = logRepository.findByStatusOrderByCreatedAt("wait")
                 if (waitList!!.isNotEmpty()){
                     val nextQueue = waitList[0]
@@ -57,6 +58,9 @@ class BotController(val logRepository: LogRepository,
             count += 1
             if (count == 3) {
                 //@todo Reject Request
+                val log = logRepository.findByStatus("verifying")
+                log!!.status = "returning"
+                logRepository.save(log)
             }
         }
 

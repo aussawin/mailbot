@@ -13,8 +13,11 @@ import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestMethod
+import org.springframework.web.bind.annotation.RestController
 
-class AuthController @Autowired
+@RestController
+class AuthController
+@Autowired
 constructor(private val tokenService: JwtTokenService,
             private val userRepository: UserRepository,
             private val passwordEncoder: PasswordEncoder,
@@ -22,6 +25,7 @@ constructor(private val tokenService: JwtTokenService,
 
     @RequestMapping(value = "/api/auth/refreshToken", method = arrayOf(RequestMethod.POST))
     fun refreshToken(@RequestHeader(value = JWT_REFRESH_TOKEN_HEADER_PARAM) jwtHeader: String): TokenResponse {
+        print("----------------- refreshToken")
         val rawToken = RawAccessJwtToken(jwtHeader)
         val claims = rawToken.parseClaims(properties.signingKey)
         val tokenType = claims.body.get("type", String::class.java)

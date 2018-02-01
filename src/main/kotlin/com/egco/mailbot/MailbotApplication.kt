@@ -1,10 +1,7 @@
 package com.egco.mailbot
 
 import com.egco.mailbot.config.FirebaseConfig
-import com.egco.mailbot.domain.Log
-import com.egco.mailbot.domain.User
-import com.egco.mailbot.repository.LogRepository
-import com.egco.mailbot.repository.UserRepository
+import com.egco.mailbot.controller.AuthController
 import com.google.firebase.FirebaseApp
 import com.google.firebase.FirebaseOptions
 import com.google.firebase.auth.FirebaseCredentials
@@ -29,7 +26,6 @@ class MailbotApplication(val firebaseConfig: FirebaseConfig){
                 .build()
 
         FirebaseApp.initializeApp(options)
-
     }
 }
 
