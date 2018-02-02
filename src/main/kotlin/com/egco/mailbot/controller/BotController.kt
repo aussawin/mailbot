@@ -63,6 +63,5 @@ class BotController(val logRepository: LogRepository,
                 logRepository.save(log)
             }
         }
-
     }
 }

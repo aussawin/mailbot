@@ -63,6 +63,11 @@ class AppController(val userRepository: UserRepository,
         val log: ArrayList<Log> = logRepository.findBySenderOrderByCreatedAt(user.name)!!
         val logList: ArrayList<LogTemplate> = ArrayList()
         log.mapTo(logList) { LogTemplate(it.sender, it.target, it.subject, it.note, it.createdAt, it.status) }
+
+        val ref = FirebaseDatabase.getInstance().reference
+        val pushRef = ref.child("message")
+        pushRef.setValueAsync(Post("target", "This is for test2"))
+
         return logList
     }
 
