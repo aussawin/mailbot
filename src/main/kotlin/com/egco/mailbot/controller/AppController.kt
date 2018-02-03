@@ -96,4 +96,10 @@ class AppController(val userRepository: UserRepository,
         return targetName
     }
 
+    @RequestMapping(value = "/getName", method = arrayOf(RequestMethod.GET))
+    fun getName(): String{
+        val user = SecurityContextHolder.getContext().authentication.principal as User
+        return user.name
+    }
+
 }
