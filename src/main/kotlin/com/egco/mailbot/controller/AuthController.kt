@@ -25,7 +25,7 @@ constructor(private val tokenService: JwtTokenService,
 
     @RequestMapping(value = "/api/auth/refreshToken", method = arrayOf(RequestMethod.POST))
     fun refreshToken(@RequestHeader(value = JWT_REFRESH_TOKEN_HEADER_PARAM) jwtHeader: String): TokenResponse {
-        print("----------------- refreshToken")
+
         val rawToken = RawAccessJwtToken(jwtHeader)
         val claims = rawToken.parseClaims(properties.signingKey)
         val tokenType = claims.body.get("type", String::class.java)

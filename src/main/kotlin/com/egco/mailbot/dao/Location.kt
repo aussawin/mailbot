@@ -1,4 +1,5 @@
 package com.egco.mailbot.dao
 
-class Location(val location: String) {
+class Location(val currentLoc: Int,
+               val targetLoc: Int) {
 }

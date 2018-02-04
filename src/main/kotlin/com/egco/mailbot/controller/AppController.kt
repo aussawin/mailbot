@@ -37,20 +37,26 @@ class AppController(val userRepository: UserRepository,
         val target = if (userRepository.existsByName(req.target)) { userRepository.findByName(req.target) }
         else { throw ResourceNotFoundException("Cannot found target name : ${req.target} !") }
 
-        val statusList = arrayListOf("calling", "sending", "verifying")
-        var isQueue = false
+        val statusList = arrayListOf("calling", "sending", "verifying", "returning")
 
+        var isQueue = false
         statusList
                 .filter { logRepository.findByStatus(it) != null }
                 .forEach { isQueue = true }
 
+        val location = Location(0, 0)
         val status = if (isQueue){ "wait" }
-        else{ "calling" }
-
-        val location = Location(sender.location.toString())
-//        val restTemplate = RestTemplate()
-//        val res: String = restTemplate.postForObject(raspConfig.baseUrl, location, String::class.java)
-//        print("\n>>>>>>>>>>>>>>>> Response from rasp : $res <<<<<<<<<<<<<<<<<<<<<\n")
+        else{
+            // if no Queue -> trigger robot API
+            val restTemplate = RestTemplate()
+            val res: String = restTemplate.postForObject(raspConfig.baseUrl, location, String::class.java)
+            // and send notification to client
+            if (res == "success") {
+                val post = Post(req.target, "Robot is now going to ${sender.name}")
+                FirebaseController().send(post)
+            }
+            "calling"
+        }
 
         val log = Log(sender.name, sender.location, target!!.name, target.location, req.subject, req.note, status, Date())
         logRepository.save(log)

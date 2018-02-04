@@ -13,7 +13,8 @@ class FirebaseController{
     fun send(message: Post) {
 
         val ref = FirebaseDatabase.getInstance().reference
-        val pushRef = ref.child("message")
-        pushRef.setValueAsync(message)
+        val refPush = ref.child("message").push()
+        ref.setValueAsync(refPush)
+
     }
 }

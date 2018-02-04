@@ -5,6 +5,7 @@ import com.egco.mailbot.config.RaspConfig
 import com.egco.mailbot.dao.FaceRequest
 import com.egco.mailbot.dao.Post
 import com.egco.mailbot.domain.Log
+import com.egco.mailbot.exception.ResourceNotFoundException
 import com.egco.mailbot.repository.LogRepository
 import org.springframework.web.bind.annotation.*
 
@@ -13,27 +14,45 @@ import org.springframework.web.bind.annotation.*
 @CrossOrigin("*")
 class BotController(val logRepository: LogRepository,
                     val raspConfig: RaspConfig) {
-
-
     private var count: Int = 0
+
 
     @RequestMapping(value = "/changeStatus", method = arrayOf(RequestMethod.PATCH))
     fun changeStatus() {
+
         var log: Log? = null
         arrayListOf("calling", "sending", "verifying", "returning")
                 .filter { logRepository.findByStatus(it) != null }
                 .forEach { log = logRepository.findByStatus(it) }
         if (log != null){
+            val target = log!!.target
+            val sender = log!!.sender
+            val post: Post
+            val status: String
+
             when (log!!.status){
                 "calling" -> {
-                    log!!.status = "sending"
-                    val post = Post(log!!.target, "Robot is sending ${log!!.subject} from ${log!!.sender} to you!")
+                    status = "sending"
+                    post = Post(target, "Robot is sending message from $sender to you.")
                     FirebaseController().send(post)
                 }
-                "sending" -> log!!.status = "verifying"
-                "verifying" -> log!!.status = "done"
-                "returning" -> log!!.status = "failed"
+                "sending" -> {
+                    status = "verifying"
+                }
+                "verifying" -> {
+                    status = "done"
+                    post = Post(sender, "The message was send to $target correctly.")
+                    FirebaseController().send(post)
+                }
+                "returning" -> {
+                    status = "failed"
+                }
+                else -> {
+                    status = "unknown"
+
+                }
             }
+            log!!.status = status
             logRepository.save(log)
             if (log!!.status == "done" || log!!.status == "failed"){
                 val waitList = logRepository.findByStatusOrderByCreatedAt("wait")
