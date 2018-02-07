@@ -37,7 +37,7 @@ class AppController(val userRepository: UserRepository,
         val target = if (userRepository.existsByName(req.target)) { userRepository.findByName(req.target) }
         else { throw ResourceNotFoundException("Cannot found target name : ${req.target} !") }
 
-        val statusList = arrayListOf("calling", "sending", "verifying", "returning")
+        val statusList = arrayListOf("calling", "waitForSender", "sending", "waitForTarget", "verifying", "returning")
 
         var isQueue = false
         statusList
