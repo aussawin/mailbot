@@ -9,6 +9,7 @@ import com.egco.mailbot.exception.ResourceNotFoundException
 import com.egco.mailbot.exception.StatusNotFoundException
 import com.egco.mailbot.repository.BotPositionRepository
 import com.egco.mailbot.repository.LogRepository
+import javafx.geometry.Pos
 import org.springframework.web.bind.annotation.*
 
 @RestController
@@ -38,17 +39,14 @@ class BotController(val logRepository: LogRepository,
             var log = logRepository.findByStatus(currentState)!!
             val target = log.target
             val sender = log.sender
-            val post: Post
 
             currentState = when (log.status){
                 "calling" -> {
-                    post = Post(sender, "Robot is ready to receive message from you!")
-                    FirebaseController().send(post)
+                    sendMessage(sender, "Robot is ready to receive message from you!")
                     "waitForSender"
                 }
                 "sending" -> {
-                    post = Post(sender, "The message was send to $target correctly.")
-                    FirebaseController().send(post)
+                    sendMessage(target, "Robot is ready to sending message to you!")
                     "waitForTarget"
                 }
                 "returning" -> {
@@ -61,19 +59,9 @@ class BotController(val logRepository: LogRepository,
             }
             log.status = currentState
             logRepository.save(log)
-            if (log.status == "done" || log.status == "failed"){
-                val waitList = logRepository.findByStatusOrderByCreatedAt("wait")
-                if (waitList!!.isNotEmpty()){
-                    val nextQueue = waitList[0]
-                    nextQueue.status = "calling"
-                    val post = Post(nextQueue.sender, "Robot is going to pick up from you.")
-                    FirebaseController().send(post)
-                    logRepository.save(nextQueue)
-                }
-            }
         }
         else{
-            throw ResourceNotFoundException()
+            throw StatusNotFoundException(status = currentState)
         }
     }
 
@@ -96,7 +84,7 @@ class BotController(val logRepository: LogRepository,
             log.status = currentState
             logRepository.save(log)
         }
-        else throw ResourceNotFoundException()
+        else throw StatusNotFoundException(status = currentState)
     }
 
     @RequestMapping(value = "/sendFaceName", method = arrayOf(RequestMethod.PATCH))
@@ -110,15 +98,34 @@ class BotController(val logRepository: LogRepository,
                 if (req.name == log.target){
                     //@todo UNLOCK
                     count = 0
+                    log.status = "done"
+                    logRepository.save(log)
+                    sendMessage(sender, "The message is sending to $target correctly.")
+                    val waitList = logRepository.findByStatusOrderByCreatedAt("wait")
+                    if (waitList!!.isNotEmpty()){
+                        val nextQueue = waitList[0]
+                        nextQueue.status = "calling"
+                        sendMessage(nextQueue.sender, "Robot is going to pick up from you.")
+                        logRepository.save(nextQueue)
+                        currentState = "calling"
+                    } else {
+                        currentState = "wait"
+                    }
                 } else {
                     //@todo trigger camera again
                     count ++
                     if (count == 3){
+                        currentState = "returning"
                         //@todo returning
                     }
                 }
             }
-            else throw ResourceNotFoundException()
-        } else throw ResourceNotFoundException()
+            else throw StatusNotFoundException(status = currentState)
+        } else throw StatusNotFoundException(status = currentState)
+    }
+
+    fun sendMessage(target: String, msg: String){
+        val post = Post(target, msg)
+        FirebaseController().send(post)
     }
 }

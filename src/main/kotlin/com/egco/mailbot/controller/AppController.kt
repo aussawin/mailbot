@@ -31,22 +31,25 @@ class AppController(val userRepository: UserRepository,
                     val raspConfig: RaspConfig) {
 
     @RequestMapping(value = "/call", method = arrayOf(RequestMethod.POST))
-    fun calling(@RequestBody req: CallingReqire): String{
+    fun calling(@RequestBody req: CallingReqire): String {
         val sender = SecurityContextHolder.getContext().authentication.principal as User
 
-        val target = if (userRepository.existsByName(req.target)) { userRepository.findByName(req.target) }
-        else { throw ResourceNotFoundException("Cannot found target name : ${req.target} !") }
+        val target = if (userRepository.existsByName(req.target)) {
+            userRepository.findByName(req.target)
+        } else {
+            throw ResourceNotFoundException("Cannot found target name : ${req.target} !")
+        }
 
         val statusList = arrayListOf("calling", "waitForSender", "sending", "waitForTarget", "verifying", "returning")
-
         var isQueue = false
         statusList
                 .filter { logRepository.findByStatus(it) != null }
                 .forEach { isQueue = true }
 
         val location = Location(0, 0)
-        val status = if (isQueue){ "wait" }
-        else{
+        val status = if (isQueue) {
+            "wait"
+        } else {
             // if no Queue -> trigger robot API
             val restTemplate = RestTemplate()
             val res: String = restTemplate.postForObject(raspConfig.baseUrl, location, String::class.java)
@@ -64,21 +67,17 @@ class AppController(val userRepository: UserRepository,
     }
 
     @RequestMapping(value = "/history", method = arrayOf(RequestMethod.GET))
-    fun showHistory(): ArrayList<LogTemplate>{
+    fun showHistory(): ArrayList<LogTemplate> {
         val user = SecurityContextHolder.getContext().authentication.principal as User
         val log: ArrayList<Log> = logRepository.findBySenderOrderByCreatedAt(user.name)!!
         val logList: ArrayList<LogTemplate> = ArrayList()
         log.mapTo(logList) { LogTemplate(it.sender, it.target, it.subject, it.note, it.createdAt, it.status) }
-
-        val ref = FirebaseDatabase.getInstance().reference
-        val pushRef = ref.child("message")
-        pushRef.setValueAsync(Post("target", "This is for test2"))
-
+        FirebaseController().send(Post("target1", "asdf"))
         return logList
     }
 
     @RequestMapping(value = "/queue", method = arrayOf(RequestMethod.GET))
-    fun showQueue(): ArrayList<LogTemplate>{
+    fun showQueue(): ArrayList<LogTemplate> {
         val log: ArrayList<Log> = logRepository.findByStatusOrderByCreatedAt("wait")!!
         val logList: ArrayList<LogTemplate> = ArrayList()
         log.mapTo(logList) { LogTemplate(it.sender, it.target, it.subject, it.note, it.createdAt, it.status) }
@@ -86,24 +85,24 @@ class AppController(val userRepository: UserRepository,
     }
 
     @RequestMapping(value = "/countQueue", method = arrayOf(RequestMethod.GET))
-    fun countQueue(): Int{
+    fun countQueue(): Int {
         val log: ArrayList<Log> = logRepository.findByStatusOrderByCreatedAt("wait")!!
         return log.size
     }
 
     @RequestMapping(value = "/getTargetName", method = arrayOf(RequestMethod.GET))
-    fun getTargetName(): ArrayList<String>{
+    fun getTargetName(): ArrayList<String> {
         val user = SecurityContextHolder.getContext().authentication.principal as User
         val target = userRepository.findByUsernameIsNotNull()
         val targetName: ArrayList<String> = arrayListOf()
         target!!
-                .filter { it.name!=user.name }
+                .filter { it.name != user.name }
                 .mapTo(targetName) { it.name }
         return targetName
     }
 
     @RequestMapping(value = "/getName", method = arrayOf(RequestMethod.GET))
-    fun getName(): String{
+    fun getName(): String {
         val user = SecurityContextHolder.getContext().authentication.principal as User
         return user.name
     }

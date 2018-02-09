@@ -11,10 +11,8 @@ import java.io.FileInputStream
 class FirebaseController{
 
     fun send(message: Post) {
-
         val ref = FirebaseDatabase.getInstance().reference
         val refPush = ref.child("message").push()
-        ref.setValueAsync(refPush)
-
+        refPush.setValueAsync(message)
     }
 }
