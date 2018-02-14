@@ -7,6 +7,4 @@ data class LogTemplate(val sender: String = "",
                        val subject: String = "",
                        val note: String = "",
                        val date: Date = Date(),
-                       val status: String = ""
-) {
-}
+                       val status: String = "")

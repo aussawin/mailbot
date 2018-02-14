@@ -5,12 +5,12 @@ import com.egco.mailbot.dao.FaceRequest
 import com.egco.mailbot.dao.Post
 import com.egco.mailbot.dao.SetCurrentPosition
 import com.egco.mailbot.domain.Log
-import com.egco.mailbot.exception.ResourceNotFoundException
+import com.egco.mailbot.exception.RaspStatusError
 import com.egco.mailbot.exception.StatusNotFoundException
 import com.egco.mailbot.repository.BotPositionRepository
 import com.egco.mailbot.repository.LogRepository
-import javafx.geometry.Pos
 import org.springframework.web.bind.annotation.*
+import org.springframework.web.client.RestTemplate
 
 @RestController
 @RequestMapping(value = "/api/botController")
@@ -21,32 +21,31 @@ class BotController(val logRepository: LogRepository,
 
     private var count: Int = 0
     private var currentState = "calling"
+    private val restTemplate = RestTemplate()
 
     @RequestMapping(value = "/setPosition", method = arrayOf(RequestMethod.PATCH))
     fun setPosition(@RequestBody setCurrentPosition: SetCurrentPosition){
         val current = botPositionRepository.findByState("current")
-        val previous = botPositionRepository.findByState("previous")
-        previous.position = current.position
-        current.position = setCurrentPosition.position
+        current.position = setCurrentPosition.message
         botPositionRepository.save(current)
-        botPositionRepository.save(previous)
     }
 
     @RequestMapping(value = "/changeStatus", method = arrayOf(RequestMethod.PATCH))
     fun changeStatus() {
         //Calling + Sending + Returning
-        if (logRepository.findByStatus(currentState) != null){
+        var current = botPositionRepository.findByState("current")
+        if (logRepository.findByStatus(current.status) != null){
             var log = logRepository.findByStatus(currentState)!!
             val target = log.target
             val sender = log.sender
 
-            currentState = when (log.status){
+            current.status = when (log.status){
                 "calling" -> {
-                    sendMessage(sender, "Robot is ready to receive message from you!")
+                    FirebaseController().send(sender, "Robot is ready to receive message from you!")
                     "waitForSender"
                 }
                 "sending" -> {
-                    sendMessage(target, "Robot is ready to sending message to you!")
+                    FirebaseController().send(target, "Robot is ready to sending message to you!")
                     "waitForTarget"
                 }
                 "returning" -> {
@@ -57,8 +56,9 @@ class BotController(val logRepository: LogRepository,
                     throw StatusNotFoundException(status = log.status)
                 }
             }
-            log.status = currentState
+            log.status = current.status
             logRepository.save(log)
+            botPositionRepository.save(current)
         }
         else{
             throw StatusNotFoundException(status = currentState)
@@ -68,20 +68,26 @@ class BotController(val logRepository: LogRepository,
     @RequestMapping(value = "/pressing", method = arrayOf(RequestMethod.PATCH))
     fun pressMethods(){
         //WaitForSender + WaitForTarget
-        if (logRepository.findByStatus(currentState) != null){
-            var log = logRepository.findByStatus(currentState)!!
-            currentState = when (log.status){
+        var current = botPositionRepository.findByState("current")
+        if (logRepository.findByStatus(current.status) != null){
+            var log = logRepository.findByStatus(current.status)!!
+            current.status = when (log.status){
                 "waitForSender" -> {
-                    //@todo Trigger to unlock
+                    // UNLOCK //
+                    val res: String = restTemplate.getForObject(raspConfig.UNLOCK, String::class.java)
+                    resIsOK(res)
                     "sending"
                 }
                 "waitForTarget" -> {
-                    //@todo Trigger to open the camera
+                    // OPEN CAMERA //
+                    val res: String = restTemplate.getForObject(raspConfig.OPENCAM, String::class.java)
+                    resIsOK(res)
                     "verifying"
                 }
                 else -> throw StatusNotFoundException(status = log.status)
             }
-            log.status = currentState
+            log.status = current.status
+            botPositionRepository.save(current)
             logRepository.save(log)
         }
         else throw StatusNotFoundException(status = currentState)
@@ -90,42 +96,47 @@ class BotController(val logRepository: LogRepository,
     @RequestMapping(value = "/sendFaceName", method = arrayOf(RequestMethod.PATCH))
     fun isUser(@RequestBody req: FaceRequest) {
         // Verifying
-        if (logRepository.findByStatus(currentState) != null) {
-            var log = logRepository.findByStatus(currentState)!!
+        var current = botPositionRepository.findByState("current")
+        if (logRepository.findByStatus(current.status) != null) {
+            var log = logRepository.findByStatus(current.status)!!
             val target = log.target
             val sender = log.sender
-            if (currentState == "verifying"){
-                if (req.name == log.target){
-                    //@todo UNLOCK
+            if (current.status == "verifying"){
+                if (req.message == log.target){
+                    // CALLING //
+                    val res: String = restTemplate.getForObject(raspConfig.CALL, String::class.java)
+                    resIsOK(res)
                     count = 0
                     log.status = "done"
                     logRepository.save(log)
-                    sendMessage(sender, "The message is sending to $target correctly.")
+                    FirebaseController().send(sender, "The message is sending to $target correctly.")
                     val waitList = logRepository.findByStatusOrderByCreatedAt("wait")
                     if (waitList!!.isNotEmpty()){
                         val nextQueue = waitList[0]
                         nextQueue.status = "calling"
-                        sendMessage(nextQueue.sender, "Robot is going to pick up from you.")
+                        FirebaseController().send(nextQueue.sender, "Robot is going to pick up from you.")
                         logRepository.save(nextQueue)
-                        currentState = "calling"
+                        current.status = "calling"
                     } else {
-                        currentState = "wait"
+                        current.status = "wait"
                     }
+                    botPositionRepository.save(current)
                 } else {
-                    //@todo trigger camera again
+                    // OPEN CAMERA //
+                    val res: String = restTemplate.getForObject(raspConfig.OPENCAM, String::class.java)
+                    resIsOK(res)
                     count ++
                     if (count == 3){
-                        currentState = "returning"
+                        current.status = "returning"
                         //@todo returning
                     }
                 }
             }
-            else throw StatusNotFoundException(status = currentState)
-        } else throw StatusNotFoundException(status = currentState)
+            else throw StatusNotFoundException(status = current.status)
+        } else throw StatusNotFoundException(status = current.status)
     }
 
-    fun sendMessage(target: String, msg: String){
-        val post = Post(target, msg)
-        FirebaseController().send(post)
+    fun resIsOK(res: String){
+        if (res != "okay") throw RaspStatusError(status = res)
     }
 }

@@ -92,18 +92,17 @@ databaseChangeLog:
             tableName: bot_position
             columns:
               - column:
-                  name: id
-                  type: int
-                  autoIncrement: true
+                  name: state
+                  type: varchar(255)
                   constraints:
                     primaryKey: true
                     nullable: false
               - column:
-                  name: state
-                  type: varchar(255)
-              - column:
                   name: position
                   type: int
+              - column:
+                  name: status
+                  type: varchar(255)
   - changeSet:
       id: 2
       author: Aussawin Khaokum

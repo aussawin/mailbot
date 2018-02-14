@@ -9,6 +9,7 @@ import com.egco.mailbot.dao.Post
 import com.egco.mailbot.domain.Log
 import com.egco.mailbot.domain.User
 import com.egco.mailbot.exception.ResourceNotFoundException
+import com.egco.mailbot.repository.BotPositionRepository
 import com.egco.mailbot.repository.LogRepository
 import com.egco.mailbot.repository.UserRepository
 import org.springframework.security.core.context.SecurityContextHolder
@@ -28,6 +29,7 @@ import java.io.FileInputStream
 @CrossOrigin("*")
 class AppController(val userRepository: UserRepository,
                     val logRepository: LogRepository,
+                    val botPositionRepository: BotPositionRepository,
                     val raspConfig: RaspConfig) {
 
     @RequestMapping(value = "/call", method = arrayOf(RequestMethod.POST))
@@ -39,6 +41,7 @@ class AppController(val userRepository: UserRepository,
         } else {
             throw ResourceNotFoundException("Cannot found target name : ${req.target} !")
         }
+        var current = botPositionRepository.findByState("current")
 
         val statusList = arrayListOf("calling", "waitForSender", "sending", "waitForTarget", "verifying", "returning")
         var isQueue = false
@@ -46,23 +49,23 @@ class AppController(val userRepository: UserRepository,
                 .filter { logRepository.findByStatus(it) != null }
                 .forEach { isQueue = true }
 
-        val location = Location(0, 0)
-        val status = if (isQueue) {
+        val location = Location()
+        current.status = if (isQueue) {
             "wait"
         } else {
             // if no Queue -> trigger robot API
             val restTemplate = RestTemplate()
-            val res: String = restTemplate.postForObject(raspConfig.baseUrl, location, String::class.java)
+            val res: String = restTemplate.postForObject(raspConfig.CALL, location, String::class.java)
             // and send notification to client
             if (res == "success") {
-                val post = Post(req.target, "Robot is now going to ${sender.name}")
-                FirebaseController().send(post)
+                FirebaseController().send(req.target, "Robot is now going to ${sender.name}")
             }
             "calling"
         }
 
-        val log = Log(sender.name, sender.location, target!!.name, target.location, req.subject, req.note, status, Date())
+        val log = Log(sender.name, sender.location, target!!.name, target.location, req.subject, req.note, current.status, Date())
         logRepository.save(log)
+        botPositionRepository.save(current)
         return "Success"
     }
 
@@ -72,7 +75,6 @@ class AppController(val userRepository: UserRepository,
         val log: ArrayList<Log> = logRepository.findBySenderOrderByCreatedAt(user.name)!!
         val logList: ArrayList<LogTemplate> = ArrayList()
         log.mapTo(logList) { LogTemplate(it.sender, it.target, it.subject, it.note, it.createdAt, it.status) }
-        FirebaseController().send(Post("target1", "asdf"))
         return logList
     }
 

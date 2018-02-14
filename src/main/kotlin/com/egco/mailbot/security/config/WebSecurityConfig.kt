@@ -50,6 +50,7 @@ class WebSecurityConfig(private val successHandler: AuthenticationSuccessHandler
                 .antMatchers(FORM_BASED_LOGIN_ENTRY_POINT).permitAll()
                 .antMatchers(TOKEN_REFRESH_ENTRY_POINT).permitAll()
                 .antMatchers(REGISTER_ENTRY_POINT).permitAll()
+                .antMatchers(FORM_BASED_BOT_CONTROLLER_ENTRY_POINT).permitAll()
                 .antMatchers(API_ENTRY_POINT).authenticated()
         http.exceptionHandling().authenticationEntryPoint(authenticationEntryPoint)
         http.addFilterBefore(buildBasicLoginProcessingFilter(),
@@ -80,7 +81,7 @@ class WebSecurityConfig(private val successHandler: AuthenticationSuccessHandler
     @Bean
     @Throws(Exception::class)
     protected fun buildJwtTokenAuthenticationProcessingFilter(): JwtTokenAuthenticationProcessingFilter {
-        val pathsToSkip = Arrays.asList(TOKEN_REFRESH_ENTRY_POINT, FORM_BASED_LOGIN_ENTRY_POINT, REGISTER_ENTRY_POINT)
+        val pathsToSkip = Arrays.asList(TOKEN_REFRESH_ENTRY_POINT, FORM_BASED_BOT_CONTROLLER_ENTRY_POINT, FORM_BASED_LOGIN_ENTRY_POINT, REGISTER_ENTRY_POINT)
         val matcher = SkipPathRequestMatcher(pathsToSkip, API_ENTRY_POINT)
         val filter = JwtTokenAuthenticationProcessingFilter(failureHandler, tokenExtractor, matcher)
         filter.setAuthenticationManager(authenticationManagerBean())
@@ -93,6 +94,7 @@ class WebSecurityConfig(private val successHandler: AuthenticationSuccessHandler
         const val JWT_REFRESH_TOKEN_HEADER_PARAM = "X-Refresh-Token"
         // End points
         private val FORM_BASED_LOGIN_ENTRY_POINT = "/api/auth/login"
+        private val FORM_BASED_BOT_CONTROLLER_ENTRY_POINT = "/api/botController/**"
         private val TOKEN_REFRESH_ENTRY_POINT = "/api/auth/refreshToken"
         private val API_ENTRY_POINT = "/api/**"
         private val REGISTER_ENTRY_POINT = "/api/auth/register"
