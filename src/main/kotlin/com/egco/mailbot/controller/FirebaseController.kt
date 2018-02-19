@@ -8,7 +8,7 @@ import com.google.firebase.auth.FirebaseCredentials
 import com.google.firebase.database.FirebaseDatabase
 import java.io.FileInputStream
 
-class FirebaseController{
+class FirebaseController {
 
     fun send(target: String, message: String) {
         val post = Post(target, message)

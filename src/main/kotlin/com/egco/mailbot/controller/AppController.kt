@@ -43,25 +43,31 @@ class AppController(val userRepository: UserRepository,
         }
         var current = botPositionRepository.findByState("current")
 
-        val statusList = arrayListOf("calling", "waitForSender", "sending", "waitForTarget", "verifying", "returning")
+        val statusList = arrayListOf("calling", "waitForSender", "sending", "waitForTarget",
+                "verifySender", "verifyTarget", "waitForPacking", "waitForPickUp", "returning")
         var isQueue = false
         statusList
                 .filter { logRepository.findByStatus(it) != null }
                 .forEach { isQueue = true }
 
-        val location = Location()
+        var location: Location
         current.status = if (isQueue) {
+            // if there are Queue -> wait
             "wait"
         } else {
+            var currentLocation = botPositionRepository.findByState("current").position
+            location = Location(currentLocation, sender.location)
             // if no Queue -> trigger robot API
             val restTemplate = RestTemplate()
             val res: String = restTemplate.postForObject(raspConfig.CALL, location, String::class.java)
             // and send notification to client
-            if (res == "success") {
+            if (res == "okay") {
                 FirebaseController().send(req.target, "Robot is now going to ${sender.name}")
             }
             "calling"
         }
+
+        print("\n$sender is calling to send to $target")
 
         val log = Log(sender.name, sender.location, target!!.name, target.location, req.subject, req.note, current.status, Date())
         logRepository.save(log)
@@ -75,6 +81,7 @@ class AppController(val userRepository: UserRepository,
         val log: ArrayList<Log> = logRepository.findBySenderOrderByCreatedAt(user.name)!!
         val logList: ArrayList<LogTemplate> = ArrayList()
         log.mapTo(logList) { LogTemplate(it.sender, it.target, it.subject, it.note, it.createdAt, it.status) }
+        FirebaseController().send("TARGET!", "Robot is now going to DDDDs")
         return logList
     }
 
