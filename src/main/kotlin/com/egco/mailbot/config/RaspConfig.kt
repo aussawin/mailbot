@@ -9,7 +9,8 @@ class RaspConfig {
     val UNLOCK : String         = baseUrl + "/unlock"
     val COUNTDOWN : String      = baseUrl + "/countdown"
     val OPENCAM : String        = baseUrl + "/opencam"
-    val WAIT_FOR_PRESS : String   = baseUrl + "/waitforpress"
+    val WAIT_FOR_PRESS : String = baseUrl + "/waitforpress"
+    val CHECK_POINT : String    = baseUrl + "/checkpoint"
 
     val STATUS_OK = "okay"
     val STATUS_FAILED = "failed"

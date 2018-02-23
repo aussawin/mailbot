@@ -81,7 +81,6 @@ class AppController(val userRepository: UserRepository,
         val log: ArrayList<Log> = logRepository.findBySenderOrderByCreatedAt(user.name)!!
         val logList: ArrayList<LogTemplate> = ArrayList()
         log.mapTo(logList) { LogTemplate(it.sender, it.target, it.subject, it.note, it.createdAt, it.status) }
-        FirebaseController().send("TARGET!", "Robot is now going to DDDDs")
         return logList
     }
 

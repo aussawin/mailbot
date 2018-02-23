@@ -246,6 +246,12 @@ class BotController(val logRepository: LogRepository,
         else throw StatusNotFoundException(status = current.status)
     }
 
+    @RequestMapping(value = "/checkPoint", method = arrayOf(RequestMethod.GET))
+    fun checkPoint(){
+        val res: String = restTemplate.getForObject(raspConfig.CHECK_POINT, String::class.java)
+        resIsOK(res)
+    }
+
     fun resIsOK(res: String){
         if (res != raspConfig.STATUS_OK) throw RaspStatusError(status = res)
     }
@@ -266,5 +272,6 @@ class BotController(val logRepository: LogRepository,
         }
         botPositionRepository.save(current)
     }
+
 
 }
