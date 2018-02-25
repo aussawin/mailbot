@@ -31,6 +31,7 @@ class AppController(val userRepository: UserRepository,
                     val logRepository: LogRepository,
                     val botPositionRepository: BotPositionRepository,
                     val raspConfig: RaspConfig) {
+    private val firebaseConfig = FirebaseConfig()
 
     @RequestMapping(value = "/call", method = arrayOf(RequestMethod.POST))
     fun calling(@RequestBody req: CallingReqire): String {
@@ -62,7 +63,7 @@ class AppController(val userRepository: UserRepository,
             val res: String = restTemplate.postForObject(raspConfig.CALL, location, String::class.java)
             // and send notification to client
             if (res == "okay") {
-                FirebaseController().send(req.target, "Robot is now going to ${sender.name}")
+                FirebaseController().send(req.target, "Robot is now going to ${sender.name}", firebaseConfig.MESSAGE_PATH)
             }
             "calling"
         }

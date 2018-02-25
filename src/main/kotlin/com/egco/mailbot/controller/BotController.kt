@@ -1,11 +1,9 @@
 package com.egco.mailbot.controller
 
+import com.egco.mailbot.config.FirebaseConfig
 import com.egco.mailbot.config.RaspConfig
 import com.egco.mailbot.config.StatusConfig
-import com.egco.mailbot.dao.FaceRequest
-import com.egco.mailbot.dao.Location
-import com.egco.mailbot.dao.Post
-import com.egco.mailbot.dao.SetCurrentPosition
+import com.egco.mailbot.dao.*
 import com.egco.mailbot.domain.BotPosition
 import com.egco.mailbot.domain.Log
 import com.egco.mailbot.exception.RaspStatusError
@@ -25,6 +23,7 @@ class BotController(val logRepository: LogRepository,
     private val status = StatusConfig()
     private var count: Int = 0
     private val restTemplate = RestTemplate()
+    private val firebaseConfig = FirebaseConfig()
 
     @RequestMapping(value = "/setPosition", method = arrayOf(RequestMethod.PATCH))
     fun setPosition(@RequestBody setCurrentPosition: SetCurrentPosition){
@@ -48,19 +47,19 @@ class BotController(val logRepository: LogRepository,
 
             current.status = when (log.status){
                 status.CALLING -> {
-                    FirebaseController().send(sender, "Robot is ready to receive message from you!")
+                    FirebaseController().send(sender, "Robot is ready to receive message from you!", firebaseConfig.MESSAGE_PATH)
                     val res: String = restTemplate.getForObject(raspConfig.COUNTDOWN, String::class.java)
                     resIsOK(res)
                     status.WAIT_FOR_SENDER
                 }
                 status.SENDING -> {
-                    FirebaseController().send(target, "Robot is ready to sending message to you!")
+                    FirebaseController().send(target, "Robot is ready to sending message to you!", firebaseConfig.MESSAGE_PATH)
                     val res: String = restTemplate.getForObject(raspConfig.COUNTDOWN, String::class.java)
                     resIsOK(res)
                     status.WAIT_FOR_TARGET
                 }
                 status.RETURNING -> {
-                    FirebaseController().send(sender, "Robot is ready to return message to you!")
+                    FirebaseController().send(sender, "Robot is ready to return message to you!", firebaseConfig.MESSAGE_PATH)
                     val res: String = restTemplate.getForObject(raspConfig.COUNTDOWN, String::class.java)
                     resIsOK(res)
                     status.WAIT_FOR_RETURNING
@@ -106,7 +105,7 @@ class BotController(val logRepository: LogRepository,
                     status.SENDING
                 }
                 status.WAIT_FOR_PICK_UP -> {
-                    FirebaseController().send(log.sender, "The message is sending to ${log.target} correctly.")
+                    FirebaseController().send(log.sender, "The message is sending to ${log.target} correctly.", firebaseConfig.MESSAGE_PATH)
                     status.DONE
                 }
                 status.WAIT_FOR_RETURNING -> {
@@ -152,6 +151,7 @@ class BotController(val logRepository: LogRepository,
                         val res: String = restTemplate.getForObject(raspConfig.OPENCAM, String::class.java)
                         resIsOK(res)
                         count ++
+                        FirebaseController().send(sender, count.toString(), firebaseConfig.VERIFY_PATH)
                         if (count == 3) {
                             checkNextQueue(current, log)
                             status.FAILED
@@ -174,6 +174,7 @@ class BotController(val logRepository: LogRepository,
                         val res: String = restTemplate.getForObject(raspConfig.OPENCAM, String::class.java)
                         resIsOK(res)
                         count ++
+                        FirebaseController().send(target, count.toString(), firebaseConfig.VERIFY_PATH)
                         if (count == 3) {
                             val location = Location(current.position, log.senderLocation)
                             val res2: String = restTemplate.postForObject(raspConfig.CALL, location, String::class.java)
@@ -197,8 +198,11 @@ class BotController(val logRepository: LogRepository,
                         val res: String = restTemplate.getForObject(raspConfig.OPENCAM, String::class.java)
                         resIsOK(res)
                         count ++
+                        FirebaseController().send(sender, count.toString(), firebaseConfig.VERIFY_PATH)
                         if (count == 3) {
-                            FirebaseController().send("ADMIN", "Cannot return to ${log.sender} at location ${log.senderLocation}")
+                            FirebaseController().send("ADMIN",
+                                    "Cannot return to ${log.sender} at location ${log.senderLocation}",
+                                    firebaseConfig.MESSAGE_PATH)
                             status.CALL_ADMIN
                         }
                         else status.VERIFY_RETURN_SENDER
@@ -231,7 +235,9 @@ class BotController(val logRepository: LogRepository,
                 }
                 status.WAIT_FOR_RETURNING -> {
                     // CALL ADMIN //
-                    FirebaseController().send("ADMIN", "Cannot return to ${log.sender} at location ${log.senderLocation}")
+                    FirebaseController().send("ADMIN",
+                            "Cannot return to ${log.sender} at location ${log.senderLocation}",
+                            firebaseConfig.MESSAGE_PATH)
                     status.CALL_ADMIN
                 }
                 else -> throw StatusNotFoundException(status = log.status)
@@ -248,7 +254,9 @@ class BotController(val logRepository: LogRepository,
 
     @RequestMapping(value = "/checkPoint", method = arrayOf(RequestMethod.GET))
     fun checkPoint(){
-        val res: String = restTemplate.getForObject(raspConfig.CHECK_POINT, String::class.java)
+        var current =  botPositionRepository.findByState("current")
+        val location = CurrentLocation(current.position)
+        val res: String = restTemplate.postForObject(raspConfig.CHECK_POINT, location, String::class.java)
         resIsOK(res)
     }
 
@@ -261,7 +269,7 @@ class BotController(val logRepository: LogRepository,
         current.status = if (waitList!!.isNotEmpty()){
             val nextQueue = waitList[0]
             nextQueue.status = status.CALLING
-            FirebaseController().send(nextQueue.sender, "Robot is going to pick up from you.")
+            FirebaseController().send(nextQueue.sender, "Robot is going to pick up from you.", firebaseConfig.MESSAGE_PATH)
             logRepository.save(nextQueue)
             val location = Location(current.position, log.senderLocation)
             val res: String = restTemplate.postForObject(raspConfig.CALL, location, String::class.java)
@@ -272,6 +280,4 @@ class BotController(val logRepository: LogRepository,
         }
         botPositionRepository.save(current)
     }
-
-
 }
