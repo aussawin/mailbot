@@ -21,7 +21,7 @@ class BotController(val logRepository: LogRepository,
                     val raspConfig: RaspConfig) {
 
     private val status = StatusConfig()
-    private var count: Int = 0
+    private var count: Int = 3
     private val restTemplate = RestTemplate()
     private val firebaseConfig = FirebaseConfig()
 
@@ -48,18 +48,21 @@ class BotController(val logRepository: LogRepository,
             current.status = when (log.status){
                 status.CALLING -> {
                     FirebaseController().send(sender, "Robot is ready to receive message from you!", firebaseConfig.MESSAGE_PATH)
+                    FirebaseController().send(sender, "Please PRESSING THE BUTTON!", firebaseConfig.GUIDE_PATH)
                     val res: String = restTemplate.getForObject(raspConfig.COUNTDOWN, String::class.java)
                     resIsOK(res)
                     status.WAIT_FOR_SENDER
                 }
                 status.SENDING -> {
                     FirebaseController().send(target, "Robot is ready to sending message to you!", firebaseConfig.MESSAGE_PATH)
+                    FirebaseController().send(target, "Please PRESSING THE BUTTON!", firebaseConfig.GUIDE_PATH)
                     val res: String = restTemplate.getForObject(raspConfig.COUNTDOWN, String::class.java)
                     resIsOK(res)
                     status.WAIT_FOR_TARGET
                 }
                 status.RETURNING -> {
                     FirebaseController().send(sender, "Robot is ready to return message to you!", firebaseConfig.MESSAGE_PATH)
+                    FirebaseController().send(sender, "Please PRESSING THE BUTTON!", firebaseConfig.GUIDE_PATH)
                     val res: String = restTemplate.getForObject(raspConfig.COUNTDOWN, String::class.java)
                     resIsOK(res)
                     status.WAIT_FOR_RETURNING
@@ -88,12 +91,14 @@ class BotController(val logRepository: LogRepository,
                 status.WAIT_FOR_SENDER -> {
                     // OPEN CAMERA //
                     val res: String = restTemplate.getForObject(raspConfig.OPENCAM, String::class.java)
+                    FirebaseController().send(log.sender, "Please LOOKING TO CAMERA!", firebaseConfig.GUIDE_PATH)
                     resIsOK(res)
                     status.VERIFY_SENDER
                 }
                 status.WAIT_FOR_TARGET -> {
                     // OPEN CAMERA //
                     val res: String = restTemplate.getForObject(raspConfig.OPENCAM, String::class.java)
+                    FirebaseController().send(log.target, "Please LOOKING TO CAMERA!", firebaseConfig.GUIDE_PATH)
                     resIsOK(res)
                     status.VERIFY_TARGET
                 }
@@ -143,20 +148,24 @@ class BotController(val logRepository: LogRepository,
                         resIsOK(res)
                         val res2: String = restTemplate.getForObject(raspConfig.WAIT_FOR_PRESS, String::class.java)
                         resIsOK(res2)
-                        count = 0
+                        count = 3
+                        FirebaseController().send(log.sender, "Please PRESSING THE BUTTON", firebaseConfig.GUIDE_PATH)
                         status.WAIT_FOR_SENDER
                     }
                     else {
                         // OPEN CAMERA AGAIN //
                         val res: String = restTemplate.getForObject(raspConfig.OPENCAM, String::class.java)
                         resIsOK(res)
-                        count ++
-                        FirebaseController().send(sender, count.toString(), firebaseConfig.VERIFY_PATH)
-                        if (count == 3) {
+                        count --
+                        if (count == 0) {
+                            FirebaseController().send(log.sender, "Verify failed", firebaseConfig.GUIDE_PATH)
                             checkNextQueue(current, log)
                             status.FAILED
                         }
-                        else status.VERIFY_SENDER
+                        else {
+                            FirebaseController().send(log.sender, "Verify failed, Please try again. $count left", firebaseConfig.GUIDE_PATH)
+                            status.VERIFY_SENDER
+                        }
                     }
                 }
                 status.VERIFY_TARGET -> {
@@ -166,22 +175,26 @@ class BotController(val logRepository: LogRepository,
                         resIsOK(res)
                         val res2: String = restTemplate.getForObject(raspConfig.WAIT_FOR_PRESS, String::class.java)
                         resIsOK(res2)
-                        count = 0
+                        count = 3
+                        FirebaseController().send(log.target, "Please PRESSING THE BUTTON", firebaseConfig.GUIDE_PATH)
                         status.WAIT_FOR_PICK_UP
                     }
                     else {
                         // OPEN CAMERA AGAIN //
                         val res: String = restTemplate.getForObject(raspConfig.OPENCAM, String::class.java)
                         resIsOK(res)
-                        count ++
-                        FirebaseController().send(target, count.toString(), firebaseConfig.VERIFY_PATH)
-                        if (count == 3) {
+                        count --
+                        if (count == 0) {
                             val location = Location(current.position, log.senderLocation)
                             val res2: String = restTemplate.postForObject(raspConfig.CALL, location, String::class.java)
                             resIsOK(res2)
+                            FirebaseController().send(target, "Verify failed", firebaseConfig.GUIDE_PATH)
                             status.RETURNING
                         }
-                        else status.VERIFY_TARGET
+                        else {
+                            FirebaseController().send(target, "Verify failed, Please try again. $count left", firebaseConfig.GUIDE_PATH)
+                            status.VERIFY_TARGET
+                        }
                     }
                 }
                 status.VERIFY_RETURN_SENDER -> {
@@ -190,22 +203,26 @@ class BotController(val logRepository: LogRepository,
                         resIsOK(res)
                         val res2: String = restTemplate.getForObject(raspConfig.WAIT_FOR_PRESS, String::class.java)
                         resIsOK(res2)
-                        count = 0
+                        count = 3
+                        FirebaseController().send(log.sender, "Please PRESSING THE BUTTON", firebaseConfig.GUIDE_PATH)
                         status.WAIT_FOR_TURNING
                     }
                     else {
                         // OPEN CAMERA AGAIN //
                         val res: String = restTemplate.getForObject(raspConfig.OPENCAM, String::class.java)
                         resIsOK(res)
-                        count ++
-                        FirebaseController().send(sender, count.toString(), firebaseConfig.VERIFY_PATH)
-                        if (count == 3) {
+                        count --
+                        if (count == 0) {
                             FirebaseController().send("ADMIN",
                                     "Cannot return to ${log.sender} at location ${log.senderLocation}",
                                     firebaseConfig.MESSAGE_PATH)
+                            FirebaseController().send(log.sender, "Verify failed", firebaseConfig.GUIDE_PATH)
                             status.CALL_ADMIN
                         }
-                        else status.VERIFY_RETURN_SENDER
+                        else {
+                            FirebaseController().send(log.sender, "Verify failed, Please try again. $count left", firebaseConfig.GUIDE_PATH)
+                            status.VERIFY_RETURN_SENDER
+                        }
                     }
                 }
                 else -> throw StatusNotFoundException(status = log.status)
