@@ -4,7 +4,7 @@ import org.springframework.context.annotation.Configuration
 
 @Configuration
 class RaspConfig {
-    final val baseUrl: String = "http://192.168.1.126:3000"
+    final val baseUrl: String = "http://172.20.10.5:3000"
     val CALL : String           = baseUrl + "/call"
     val UNLOCK : String         = baseUrl + "/unlock"
     val COUNTDOWN : String      = baseUrl + "/countdown"

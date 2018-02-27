@@ -2,6 +2,7 @@ package com.egco.mailbot.controller
 
 import com.egco.mailbot.config.FirebaseConfig
 import com.egco.mailbot.config.RaspConfig
+import com.egco.mailbot.config.StatusConfig
 import com.egco.mailbot.dao.CallingReqire
 import com.egco.mailbot.dao.Location
 import com.egco.mailbot.dao.LogTemplate
@@ -31,6 +32,8 @@ class AppController(val userRepository: UserRepository,
                     val logRepository: LogRepository,
                     val botPositionRepository: BotPositionRepository,
                     val raspConfig: RaspConfig) {
+
+    private val status = StatusConfig()
     private val firebaseConfig = FirebaseConfig()
 
     @RequestMapping(value = "/call", method = arrayOf(RequestMethod.POST))
@@ -54,7 +57,7 @@ class AppController(val userRepository: UserRepository,
         var location: Location
         current.status = if (isQueue) {
             // if there are Queue -> wait
-            "wait"
+            status.WAIT
         } else {
             var currentLocation = botPositionRepository.findByState("current").position
             location = Location(currentLocation, sender.location)
@@ -63,16 +66,18 @@ class AppController(val userRepository: UserRepository,
             val res: String = restTemplate.postForObject(raspConfig.CALL, location, String::class.java)
             // and send notification to client
             if (res == "okay") {
-                FirebaseController().send(req.target, "Robot is now going to ${sender.name}", firebaseConfig.MESSAGE_PATH)
+                FirebaseController().send(sender.name, "Robot is now going to ${sender.name}", firebaseConfig.MESSAGE_PATH)
             }
-            "calling"
+            status.CALLING
         }
 
         print("\n$sender is calling to send to $target")
 
         val log = Log(sender.name, sender.location, target!!.name, target.location, req.subject, req.note, current.status, Date())
         logRepository.save(log)
-        botPositionRepository.save(current)
+        if (!isQueue){
+            botPositionRepository.save(current)
+        }
         return "Success"
     }
 
