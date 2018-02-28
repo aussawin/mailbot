@@ -119,12 +119,15 @@ class BotController(val logRepository: LogRepository,
                     resIsOK(res)
                     status.VERIFY_RETURN_SENDER
                 }
+                status.WAIT_FOR_TURNING -> {
+                    status.FAILED
+                }
                 else -> throw StatusNotFoundException(status = log.status)
             }
             log.status = current.status
             botPositionRepository.save(current)
             logRepository.save(log)
-            if (log.status == status.DONE){
+            if (log.status == status.DONE || log.status == status.FAILED){
                 checkNextQueue(current, log)
             }
         }
