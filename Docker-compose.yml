@@ -1,0 +1,14 @@
+db-production:
+  image: mariadb:latest
+  environment:
+    - MYSQL_ROOT_PASSWORD=root_password
+    - MYSQL_USER=db_user
+    - MYSQL_PASSWORD=db_password
+    - MYSQL_DATABASE=demo
+
+my_demo:
+  image: demo/rest
+  links:
+    - mailbotdb:mariadb
+  ports:
+    - 8080:8080

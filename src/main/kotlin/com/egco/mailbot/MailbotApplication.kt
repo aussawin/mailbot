@@ -1,27 +1,31 @@
 package com.egco.mailbot
 
-import com.egco.mailbot.domain.Log
-import com.egco.mailbot.domain.User
-import com.egco.mailbot.repository.LogRepository
-import com.egco.mailbot.repository.UserRepository
+import com.egco.mailbot.config.FirebaseConfig
+import com.egco.mailbot.controller.AuthController
+import com.google.firebase.FirebaseApp
+import com.google.firebase.FirebaseOptions
+import com.google.firebase.auth.FirebaseCredentials
 import org.springframework.boot.CommandLineRunner
 import org.springframework.boot.SpringApplication
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.context.annotation.Bean
+import java.io.FileInputStream
 import java.util.*
 
 @SpringBootApplication
-class MailbotApplication(val userRepository: UserRepository,
-                         val logRepository: LogRepository){
+class MailbotApplication(val firebaseConfig: FirebaseConfig){
 
     @Bean
     open fun init() = CommandLineRunner {
-        val userList: MutableList<User> = ArrayList()
-        (1..5).mapTo(userList) { User("user$it", "user$it@gmail.com", "password", "1111", "user$it", Date()) }
-        userRepository.save(userList.toList())
-        val logList: MutableList<Log> = ArrayList()
-        (1..3).mapTo(logList) { Log("user$it", "user${it+1}", "Subject#$it", "This is note #$it", Date()) }
-        logRepository.save((logList.toList()))
+
+        val serviceAccount = FileInputStream(firebaseConfig.firebaseServiceAccountUrl)
+
+        val options = FirebaseOptions.Builder()
+                .setCredential(FirebaseCredentials.fromCertificate(serviceAccount))
+                .setDatabaseUrl("https://mailbotmobile.firebaseio.com")
+                .build()
+
+        FirebaseApp.initializeApp(options)
     }
 }
 
